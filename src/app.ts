@@ -20,7 +20,7 @@ app.get<{}, MessageResponse>('/', (req, res) => {
   res.set('app');
 });
 
-app.use('/', api);
+app.use('/api', api);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
