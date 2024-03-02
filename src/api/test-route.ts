@@ -1,11 +1,11 @@
 import express from 'express';
+import MessageResponse from '../interfaces/MessageResponse';
 
 const router = express.Router();
 
-type TestResponse = string[];
 
-router.get<{}, TestResponse>('/', (req, res) => {
-  res.set('test route');
+router.get<{}, MessageResponse>('/', (req, res) => {
+  res.json({message: 'test route'});
 });
 
 export default router;

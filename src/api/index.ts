@@ -6,9 +6,9 @@ import test from './test-route';
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
-  res.set('api index');
+  res.json({message: 'api index'});
 });
 
-router.use('/', test);
+router.use('/test', test);
 
 export default router;
