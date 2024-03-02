@@ -17,12 +17,10 @@ app.use(cors());
 app.use(express.json());
 
 app.get<{}, MessageResponse>('/', (req, res) => {
-  res.json({
-    message: '🦄🌈✨👋🌎🌍🌏✨🌈🦄',
-  });
+  res.set('app');
 });
 
-app.use('/api/v1', api);
+app.use('/', api);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
