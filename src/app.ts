@@ -3,12 +3,14 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import cors from 'cors';
 
-import { notFound, errorHandler } from './middlewares';
+import { notFound, errorHandler, redirect } from './middlewares';
 import api from './api';
 
 require('dotenv').config();
 
 const app = express();
+
+app.use(redirect);
 
 app.use(morgan('dev'));
 app.use(helmet());

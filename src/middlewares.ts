@@ -11,6 +11,18 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
   res.status(statusCode);
   res.json({
-    message: err.message,
+    error: err.message,
   });
+}
+
+export function redirect(req: Request, res: Response, next: NextFunction) {
+  if (
+    req.headers &&
+    req.headers['user-agent'] &&
+    !req.headers['user-agent'].includes('curl')
+  ) {
+    res.writeHead(302, { Location: 'https://github.com/leomosley/art' });
+    return res.end();
+  }
+  next();
 }

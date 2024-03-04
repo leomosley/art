@@ -1,31 +1,42 @@
 import express, { Request, Response } from 'express';
-import { promises as fs, Dirent } from 'fs';
-import * as path from 'path';
 import { Readable } from 'stream';
+import axios from 'axios';
+import { getFrames } from '../frames';
 
 interface StreamerOptions {
   flip: boolean;
 }
 
+interface Frame {
+  url: string;
+  downloadUrl: string;
+  pathname: string;
+  size: number;
+  uploadedAt: Date;
+}
+
 let frames: string[] = [];
+
+async function readFrameContent(frame: Frame): Promise<string> {
+  try {
+    const response = await axios.get(frame.url);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
 
 async function loadFrames(framesPath: string): Promise<void> {
   try {
-    const files: Dirent[] = await fs.readdir(framesPath, { withFileTypes: true });
-
+    const blob: Frame[] = await getFrames(framesPath);
     frames = [];
 
-    for (const file of files) {
-      const filePath = path.join(framesPath, file.name);
-      const stat = await fs.stat(filePath);
-
-      if (stat.isFile()) {
-        const frame = await fs.readFile(filePath);
-        frames.push(frame.toString());
-      }
+    for (const file of blob) {
+      const content = await readFrameContent(file);
+      frames.push(content);
     }
   } catch (error) {
-    console.error(`Error loading frames: ${error}`);
+    throw error;
   }
 }
 
@@ -49,39 +60,23 @@ const router = express.Router()
 
 router.get('/:path', async (req: Request, res: Response) => {
   const requestedPath: string = req.params.path;
-  const framesBasePath: string = path.join(__dirname, '../frames/');
-  const framesPath: string = framesBasePath + requestedPath
 
   if (requestedPath === 'healthcheck') {
     res.status(200).json({ status: 'ok' });
     return;
   }
 
-  if (
-    req.headers &&
-    req.headers['user-agent'] &&
-    !req.headers['user-agent'].includes('curl')
-  ) {
-    res.writeHead(302, { Location: 'https://github.com/leomosley/art' });
-    return res.end();
-  }
-
-  try {
-    const framesDirectoryExists = await fs.access(framesPath)
-      .then(() => true)
-      .catch(() => false);
-    
+  try {    
     if (
       !requestedPath || 
-      requestedPath === '/' || 
-      !framesDirectoryExists
+      requestedPath === '/'
     ) {
-      return res.status(404).send('Frames directory not found');
+      return res.sendStatus(404);
     }
-    
-    await loadFrames(framesPath);
-  } catch (err) {
-    res.status(500);
+
+    await loadFrames(requestedPath);
+  } catch (error) {
+    res.sendStatus(400);
     return;
   }
 
