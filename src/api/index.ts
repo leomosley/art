@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { Readable } from 'stream';
 import axios from 'axios';
-import { getFrames } from '../frames';
+import { getFolders, getFrames } from '../frames';
 
 interface StreamerOptions {
   flip: boolean;
@@ -35,6 +35,7 @@ async function loadFrames(framesPath: string): Promise<void> {
       const content = await readFrameContent(file);
       frames.push(content);
     }
+    frames.pop()
   } catch (error) {
     throw error;
   }
@@ -67,16 +68,13 @@ router.get('/:path', async (req: Request, res: Response) => {
   }
 
   try {    
-    if (
-      !requestedPath || 
-      requestedPath === '/'
-    ) {
-      return res.sendStatus(404);
+    if (!requestedPath || requestedPath === '/') {
+      throw new Error();
     }
 
     await loadFrames(requestedPath);
   } catch (error) {
-    res.sendStatus(400);
+    res.status(404).send(`Not a valid path. Select one of these frames: ${(await getFolders()).join('\n')}`);
     return;
   }
 
